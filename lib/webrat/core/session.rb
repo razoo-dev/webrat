@@ -127,6 +127,11 @@ For example:
       @http_method  = http_method
       @data         = data
 
+      #for Rails 4 compatibility
+      @response = ActionDispatch::TestResponse.new(response.status, response.headers, response.body)
+      @controller = controller
+
+
       if internal_redirect?
         check_for_infinite_redirects
         request_page(response_location, :get, {})
