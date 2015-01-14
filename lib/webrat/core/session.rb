@@ -76,7 +76,12 @@ For example:
       @default_headers = {}
       @custom_headers  = {}
       @current_url     = nil
+      @is_last_request_https = false
       reset
+    end
+
+    def https?
+      @is_last_request_https
     end
 
     def current_dom #:nodoc:
@@ -114,6 +119,15 @@ For example:
       h = headers
       h['HTTP_REFERER'] = @current_url if @current_url
 
+      unless url =~ /\Ahttp/
+        #relative URL, use the last HTTPS
+        if @is_last_request_https
+          h['HTTPS'] = 'on'
+        else
+          h['HTTPS'] = nil
+        end
+      end
+
       debug_log "REQUESTING PAGE: #{http_method.to_s.upcase} #{url} with #{data.inspect} and HTTP headers #{h.inspect}"
 
       process_request(http_method, url, data, h)
@@ -122,7 +136,7 @@ For example:
       raise PageLoadError.new("Page load was not successful (Code: #{response_code.inspect}):\n#{formatted_error}") unless success_code?
 
       reset
-
+      @is_last_request_https = (h['HTTPS'] == 'on' || url =~ /\Ahttps:/)
       @current_url  = url
       @http_method  = http_method
       @data         = data
