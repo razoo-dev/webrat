@@ -117,7 +117,10 @@ For example:
 
     def request_page(url, http_method, data) #:nodoc:
 
-      unless url =~ /\Ahttp/
+      if url =~ /\Ahttp/
+        @custom_headers.delete('HTTPS')
+        @custom_headers.delete('Host')
+      else
         #relative URL, use the last HTTPS and last host
         @custom_headers['Host'] = current_host
         if @is_last_request_https
