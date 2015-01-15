@@ -316,7 +316,7 @@ For example:
     end
 
     def current_host
-      URI.parse(current_url).host || @custom_headers["Host"] || default_current_host
+      (current_url && URI.parse(current_url).host) || @custom_headers["Host"] || default_current_host
     end
 
     def response_location_host
