@@ -22,23 +22,23 @@ module Webrat
 
   def self.adapter_class
     case Webrat.configuration.mode
-    when :rails
-      RailsAdapter
-    when :merb
-      MerbAdapter
-    when :rack
-      RackAdapter
-    when :rack_test
-      warn("The :rack_test mode is deprecated. Please use :rack instead")
-      require "webrat/rack"
-      RackAdapter
-    when :sinatra
-      warn("The :sinatra mode is deprecated. Please use :rack instead")
-      SinatraAdapter
-    when :mechanize
-      MechanizeAdapter
-    else
-      raise WebratError.new(<<-STR)
+      when :rails
+        RailsAdapter
+      when :merb
+        MerbAdapter
+      when :rack
+        RackAdapter
+      when :rack_test
+        warn("The :rack_test mode is deprecated. Please use :rack instead")
+        require "webrat/rack"
+        RackAdapter
+      when :sinatra
+        warn("The :sinatra mode is deprecated. Please use :rack instead")
+        SinatraAdapter
+      when :mechanize
+        MechanizeAdapter
+      else
+        raise WebratError.new(<<-STR)
 Unknown Webrat mode: #{Webrat.configuration.mode.inspect}
 
 Please ensure you have a Webrat configuration block that specifies a mode
@@ -51,7 +51,7 @@ For example:
   Webrat.configure do |config|
     config.mode = :rails
   end
-      STR
+        STR
     end
   end
 
@@ -66,8 +66,8 @@ For example:
     attr_reader :elements
 
     def_delegators :@adapter, :response, :response_code, :response_body, :response_headers,
-      :response_body=, :response_code=,
-      :get, :post, :put, :delete
+                   :response_body=, :response_code=,
+                   :get, :post, :put, :delete
 
     def initialize(adapter = nil)
       @adapter         = adapter
@@ -116,17 +116,19 @@ For example:
     end
 
     def request_page(url, http_method, data) #:nodoc:
-      h = headers
-      h['HTTP_REFERER'] = @current_url if @current_url
 
       unless url =~ /\Ahttp/
-        #relative URL, use the last HTTPS
+        #relative URL, use the last HTTPS and last host
+        @custom_headers['Host'] = current_host
         if @is_last_request_https
-          h['HTTPS'] = 'on'
+          @custom_headers['HTTPS'] = 'on'
         else
-          h['HTTPS'] = nil
+          @custom_headers.delete('HTTPS')
         end
       end
+
+      h = headers
+      h['HTTP_REFERER'] = @current_url if @current_url
 
       debug_log "REQUESTING PAGE: #{http_method.to_s.upcase} #{url} with #{data.inspect} and HTTP headers #{h.inspect}"
 
@@ -161,8 +163,8 @@ For example:
     end
 
     def infinite_redirect_limit_exceeded?
-       Webrat.configuration.infinite_redirect_limit &&
-       (@_identical_redirect_count || 0) > Webrat.configuration.infinite_redirect_limit
+      Webrat.configuration.infinite_redirect_limit &&
+          (@_identical_redirect_count || 0) > Webrat.configuration.infinite_redirect_limit
     end
 
     def success_code? #:nodoc:
@@ -296,7 +298,7 @@ For example:
     def_delegators :current_scope, :select_option
     def_delegators :current_scope, :field_named
 
-  private
+    private
 
     def process_request(http_method, url, data, headers)
       if headers.empty?
